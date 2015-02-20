@@ -35,6 +35,13 @@ func UserJournalsShow(c *app.Context) *app.Error {
 		c.LogError(err)
 		return &app.Error{404, fmt.Sprintf("Journal could not be found for uuid %s", uuid)}
 	}
+
+	a, err := c.JournalStorage.Answers(j.ID)
+	if err != nil {
+		c.LogError(err)
+	}
+	j.Answers = a
+
 	return c.JSON(200, "journals", j)
 }
 
@@ -90,6 +97,7 @@ func UserJournalsCreate(c *app.Context) *app.Error {
 	for _, question := range questions {
 		answer := storage.Answer{}
 		answer.Values = answersForQuestions[question.UUID]
+		answer.Answered = string(answer.Values) != "null"
 		answer.QuestionID = question.ID
 		journal.Answers = append(journal.Answers, answer)
 		if question.Processor == "emotions" {
@@ -104,10 +112,10 @@ func UserJournalsCreate(c *app.Context) *app.Error {
 		}
 	}
 
-	// if err := c.JournalStorage.Insert(journal); err != nil {
-	//	c.LogError(err)
-	// 	return &app.Error{500, "Journal could not be created." + err.Error()}
-	// }
+	if err := c.JournalStorage.Insert(journal); err != nil {
+		c.LogError(err)
+		return &app.Error{500, "Journal could not be created." + err.Error()}
+	}
 
 	go func(c *app.Context, journal *storage.Journal, questions []storage.Question) {
 		for i, question := range questions {

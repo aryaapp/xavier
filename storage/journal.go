@@ -12,8 +12,8 @@ type Journal struct {
 	Questions pg.JSON   `json:"questions" db:"questions"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	ClientID  int       `json:"client_id" db:"client_id"`
-	UserID    int       `json:"user_id" db:"user_id"`
+	ClientID  int       `json:"-" db:"client_id"`
+	UserID    int       `json:"-" db:"user_id"`
 	Answers   []Answer  `json:"answers,omitempty"`
 	Metadata  pg.JSON   `json:"metadata,omitempty" db:"metadata"`
 }
@@ -22,6 +22,7 @@ type Answer struct {
 	ID         int       `json:"-" db:"id"`
 	UUID       string    `json:"uuid" db:"uuid"`
 	Values     pg.JSON   `json:"values" db:"values"`
+	Answered   bool      `json:"answered" db:"answered"`
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
 	JournalID  int       `json:"-" db:"journal_id"`
@@ -32,5 +33,6 @@ type JournalStorage interface {
 	All(int) ([]Journal, error)
 	Find(string, int) (*Journal, error)
 	LastWeek(int) ([]Journal, error)
+	Answers(int) ([]Answer, error)
 	Insert(*Journal) error
 }
