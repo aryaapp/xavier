@@ -14,6 +14,6 @@ Xavier is the API server for Arya. Many awesome
   - createdb "arya_development"
   - rake db:migrate db=development (sets up the database tables)
   - rake db:seeds db=development (puts in some dummy data)
-5. (Optional) Setup all the Go dependencies via 'go get'. If you try to build to project, you'll see the dependencies you are missing. In the future I'll make this easier via package management.
-6. (Optional) Install fresh https://github.com/pilu/fresh to let the project recompiled after you changed and saved a file. Really handy!
+5. (Optional) Setup all the Go dependencies via the Makefile. Run 'make install' and you're set!
+6. Run 'fresh' and the project will be build. Also it will be recompiled after you changed and saved a file. Woot!
 7. (Optional) Install pgweb to easily look inside the PostgreSQL databases https://github.com/sosedoff/pgweb
