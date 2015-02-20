@@ -1,0 +1,161 @@
+package app
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+	"xavier/storage"
+	p "xavier/storage/postgres"
+	r "xavier/storage/redis"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/julienschmidt/httprouter"
+	"github.com/nbio/httpcontext"
+)
+
+type Context struct {
+	ClientCache         storage.ClientCache
+	ClientStorage       storage.ClientStorage
+	DeviceStorage       storage.DeviceStorage
+	JournalStorage      storage.JournalStorage
+	KeywordStorage      storage.KeywordStorage
+	NoteStorage         storage.NoteStorage
+	QuestionStorage     storage.QuestionStorage
+	QuestionaireStorage storage.QuestionaireStorage
+	ThemeStorage        storage.ThemeStorage
+	UserStorage         storage.UserStorage
+
+	Environment *Environment
+	Request     *http.Request
+	URLParams   httprouter.Params
+	Writer      http.ResponseWriter
+}
+
+type Error struct {
+	Code    int
+	Message string
+}
+
+type M map[string]interface{}
+
+func NewContext(env *Environment, pg *sqlx.DB) *Context {
+	return &Context{
+		ClientCache:         &r.ClientCache{},
+		ClientStorage:       &p.ClientDatabase{pg},
+		DeviceStorage:       &p.DeviceDatabase{pg},
+		JournalStorage:      &p.JournalDatabase{pg},
+		KeywordStorage:      &p.KeywordDatabase{pg},
+		NoteStorage:         &p.NoteDatabase{pg},
+		QuestionStorage:     &p.QuestionDatabase{pg},
+		QuestionaireStorage: &p.QuestionaireDatabase{pg},
+		ThemeStorage:        &p.ThemeDatabase{pg},
+		UserStorage:         &p.UserDatabase{pg},
+		Environment:         env,
+	}
+}
+
+func ChildContext(parent *Context, r *http.Request, w http.ResponseWriter) *Context {
+	ctx := &Context{
+		ClientCache:         parent.ClientCache,
+		ClientStorage:       parent.ClientStorage,
+		DeviceStorage:       parent.DeviceStorage,
+		JournalStorage:      parent.JournalStorage,
+		KeywordStorage:      parent.KeywordStorage,
+		NoteStorage:         parent.NoteStorage,
+		QuestionStorage:     parent.QuestionStorage,
+		QuestionaireStorage: parent.QuestionaireStorage,
+		ThemeStorage:        parent.ThemeStorage,
+		UserStorage:         parent.UserStorage,
+		Environment:         parent.Environment,
+		Request:             r,
+		URLParams:           Params(r),
+		Writer:              w,
+	}
+	return ctx
+}
+
+func (c *Context) Production() bool {
+	return c.Environment.Name == "production"
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Context Env
+/////////////////////////////////////////////////////////////////////////////
+
+func (c *Context) GetUserID() int {
+	if userID, ok := httpcontext.Get(c.Request, "userID").(int); ok {
+		return userID
+	}
+	return 1
+}
+
+func (c *Context) SetUserID(userID int) {
+	httpcontext.Set(c.Request, "userID", userID)
+}
+
+func (c *Context) GetClientForCurrentRequest() *storage.Client {
+	if client, ok := httpcontext.Get(c.Request, "client").(*storage.Client); ok {
+		return client
+	}
+	return nil
+}
+
+func (c *Context) SetClientForCurrentRequest(client *storage.Client) {
+	httpcontext.Set(c.Request, "client", client)
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Render
+/////////////////////////////////////////////////////////////////////////////
+
+func (c *Context) JSON(code int, key string, obj interface{}) *Error {
+	writeHeader(c.Writer, code, "application/json")
+	if err := json.NewEncoder(c.Writer).Encode(M{key: obj}); err != nil {
+		// TODO
+		log.Fatalln(err)
+
+		return &Error{500, "Internal JSON error."}
+	}
+	return nil
+}
+
+func (c *Context) JSONError(code int, title string, description string) {
+	writeHeader(c.Writer, code, "application/json")
+	if err := json.NewEncoder(c.Writer).Encode(M{"error": M{"code": code, "title": title, "description": description}}); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func writeHeader(w http.ResponseWriter, code int, contentType string) {
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(code)
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Log
+/////////////////////////////////////////////////////////////////////////////
+
+func (c *Context) LogError(err error) {
+	if c.Production() == false {
+		log.Print("Error: " + err.Error())
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Parameter binding
+/////////////////////////////////////////////////////////////////////////////
+
+func (c *Context) BindParams(obj interface{}) error {
+	decoder := json.NewDecoder(c.Request.Body)
+	if err := decoder.Decode(obj); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Context) BindParamsAndValidate(obj interface{}) error {
+	if err := c.BindParams(obj); err != nil {
+		return err
+	}
+	return Validate(obj)
+}
