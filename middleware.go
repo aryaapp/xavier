@@ -25,17 +25,22 @@ func ContentType(c *app.Context, next http.HandlerFunc) *app.Error {
 	return nil
 }
 
-func Client(c *app.Context, next http.HandlerFunc) *app.Error {
-	header := c.Request.Header.Get("Client")
+func CurrentApp(c *app.Context, next http.HandlerFunc) *app.Error {
+	header := c.Request.Header.Get("Authorization")
 	if len(header) == 0 {
-		return &app.Error{401, "Authorization error: Client header is empty."}
+		return &app.Error{401, "Authorization error: App header is empty."}
 	}
 
-	client, err := setClient(c, header)
-	if err != nil {
-		return &app.Error{401, "Authorization error: Invalid Client request"}
+	if !(len(header) > 3 && strings.ToUpper(header[0:3]) == "APP") {
+		return &app.Error{401, "Authorization error: App header is malformed."}
 	}
-	c.SetClientForCurrentRequest(client)
+
+	appID := header[4:]
+	a, err := setApp(c, appID)
+	if err != nil {
+		return &app.Error{401, "Authorization error: Invalid App request"}
+	}
+	c.SetAppForCurrentRequest(a)
 
 	next(c.Writer, c.Request)
 	return nil
@@ -47,22 +52,26 @@ func Bearer(c *app.Context, next http.HandlerFunc) *app.Error {
 		return &app.Error{401, "Authorization error: " + err.Error()}
 	}
 
-	client, err := setClient(c, token.Audience)
-	if err != nil {
-		return &app.Error{401, "Authorization error: Invalid Client in token"}
+	if !token.ContainsScopes(c.Scopes) {
+		return &app.Error{401, "Authorization error: Doesn't have required scopes"}
 	}
 
-	c.SetClientForCurrentRequest(client)
+	a, err := setApp(c, token.Audience)
+	if err != nil {
+		return &app.Error{401, "Authorization error: Invalid App in token"}
+	}
+
+	c.SetAppForCurrentRequest(a)
 	c.SetUserID(token.Subject)
 
 	next(c.Writer, c.Request)
 	return nil
 }
 
-func setClient(c *app.Context, uuid string) (*storage.Client, error) {
-	client, err := c.ClientCache.Find(uuid)
-	if client == nil && err == nil {
-		client, err = c.ClientStorage.Find(uuid)
+func setApp(c *app.Context, uuid string) (*storage.App, error) {
+	a, err := c.AppCache.Find(uuid)
+	if a == nil && err == nil {
+		a, err = c.AppStorage.Find(uuid)
 	}
-	return client, err
+	return a, err
 }

@@ -7,6 +7,7 @@ import (
 	"xavier/storage"
 	p "xavier/storage/postgres"
 	r "xavier/storage/redis"
+	"xavier/validator"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/julienschmidt/httprouter"
@@ -14,8 +15,8 @@ import (
 )
 
 type Context struct {
-	ClientCache         storage.ClientCache
-	ClientStorage       storage.ClientStorage
+	AppCache            storage.AppCache
+	AppStorage          storage.AppStorage
 	DeviceStorage       storage.DeviceStorage
 	JournalStorage      storage.JournalStorage
 	KeywordStorage      storage.KeywordStorage
@@ -27,8 +28,10 @@ type Context struct {
 
 	Environment *Environment
 	Request     *http.Request
+	Scopes      []string
 	URLParams   httprouter.Params
 	Writer      http.ResponseWriter
+	Validator   *validator.Validator
 }
 
 type Error struct {
@@ -39,9 +42,10 @@ type Error struct {
 type M map[string]interface{}
 
 func NewContext(env *Environment, pg *sqlx.DB) *Context {
+	validator := validator.New()
 	return &Context{
-		ClientCache:         &r.ClientCache{},
-		ClientStorage:       &p.ClientDatabase{pg},
+		AppCache:            &r.AppCache{},
+		AppStorage:          &p.AppDatabase{pg},
 		DeviceStorage:       &p.DeviceDatabase{pg},
 		JournalStorage:      &p.JournalDatabase{pg},
 		KeywordStorage:      &p.KeywordDatabase{pg},
@@ -51,13 +55,14 @@ func NewContext(env *Environment, pg *sqlx.DB) *Context {
 		ThemeStorage:        &p.ThemeDatabase{pg},
 		UserStorage:         &p.UserDatabase{pg},
 		Environment:         env,
+		Validator:           validator,
 	}
 }
 
 func ChildContext(parent *Context, r *http.Request, w http.ResponseWriter) *Context {
 	ctx := &Context{
-		ClientCache:         parent.ClientCache,
-		ClientStorage:       parent.ClientStorage,
+		AppCache:            parent.AppCache,
+		AppStorage:          parent.AppStorage,
 		DeviceStorage:       parent.DeviceStorage,
 		JournalStorage:      parent.JournalStorage,
 		KeywordStorage:      parent.KeywordStorage,
@@ -67,6 +72,7 @@ func ChildContext(parent *Context, r *http.Request, w http.ResponseWriter) *Cont
 		ThemeStorage:        parent.ThemeStorage,
 		UserStorage:         parent.UserStorage,
 		Environment:         parent.Environment,
+		Validator:           parent.Validator,
 		Request:             r,
 		URLParams:           Params(r),
 		Writer:              w,
@@ -93,15 +99,16 @@ func (c *Context) SetUserID(userID int) {
 	httpcontext.Set(c.Request, "userID", userID)
 }
 
-func (c *Context) GetClientForCurrentRequest() *storage.Client {
-	if client, ok := httpcontext.Get(c.Request, "client").(*storage.Client); ok {
-		return client
+func (c *Context) GetAppForCurrentRequest() *storage.App {
+	app, ok := httpcontext.Get(c.Request, "app").(*storage.App)
+	if !ok {
+		return nil
 	}
-	return nil
+	return app
 }
 
-func (c *Context) SetClientForCurrentRequest(client *storage.Client) {
-	httpcontext.Set(c.Request, "client", client)
+func (c *Context) SetAppForCurrentRequest(app *storage.App) {
+	httpcontext.Set(c.Request, "app", app)
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -157,5 +164,5 @@ func (c *Context) BindParamsAndValidate(obj interface{}) error {
 	if err := c.BindParams(obj); err != nil {
 		return err
 	}
-	return Validate(obj)
+	return c.Validator.Validate(obj)
 }

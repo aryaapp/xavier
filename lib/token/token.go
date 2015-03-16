@@ -90,7 +90,7 @@ func (t *Token) Sign(secret string) (string, error) {
 }
 
 func (t *Token) ContainsScopes(scopes []string) bool {
-	return true
+	return s.ContainsSlice(t.Scopes, scopes)
 }
 
 func scopesToString(scp []string) string {

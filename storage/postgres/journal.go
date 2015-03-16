@@ -16,9 +16,9 @@ const (
 	journalsLastWeek = `SELECT * FROM journals j WHERE j.user_id = $1 AND created_at >= now()::date - 7`
 	journalsAnswers  = `SELECT * FROM answers a WHERE a.journal_id = $1`
 	journalsInsert   = `
-		INSERT INTO journals (feeling, questions, created_at, updated_at, client_id, user_id) 
+		INSERT INTO journals (feeling, questions, created_at, updated_at, app_id, user_id) 
 		VALUES ($1, $2, $3, $4, $5, $6) 
-		RETURNING uuid, id, feeling, questions, created_at, updated_at, client_id, user_id`
+		RETURNING uuid, id, feeling, questions, created_at, updated_at, app_id, user_id`
 	journalsAnswerInsert = `
 		INSERT INTO answers (values, created_at, updated_at, journal_id, question_id) 
 		VALUES ($1, $2, $3, $4, $5) 
@@ -50,7 +50,7 @@ func (db *JournalDatabase) Answers(journalID int) ([]storage.Answer, error) {
 func (db *JournalDatabase) Insert(journal *storage.Journal) error {
 	tx := db.MustBegin()
 
-	if err := tx.Get(journal, journalsInsert, journal.Feeling, journal.Questions, journal.CreatedAt, journal.UpdatedAt, journal.ClientID, journal.UserID); err != nil {
+	if err := tx.Get(journal, journalsInsert, journal.Feeling, journal.Questions, journal.CreatedAt, journal.UpdatedAt, journal.AppID, journal.UserID); err != nil {
 		return err
 	}
 

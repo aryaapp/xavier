@@ -15,6 +15,8 @@ class CreateNotifications < ActiveRecord::Migration
 
     change_column :notifications, :uuid, :uuid, :null => false
     add_index :notifications, :uuid
+
+    add_reference :notifications, :app, index: true    
     add_reference :notifications, :user, index: true    
   end
 end

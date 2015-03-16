@@ -62,6 +62,8 @@ func (r *Router) Handle(method string, path string, handler http.HandlerFunc) {
 				path = "/" + g.path + path
 			}
 		}
+	} else {
+		path = "/" + path
 	}
 
 	r.router.Handle(method, path, func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {

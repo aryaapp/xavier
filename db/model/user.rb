@@ -1,7 +1,7 @@
 class User < ActiveRecord::Base    
   has_secure_password
 
-  has_one :access_token  
+  belongs_to :app
   belongs_to :theme
 
   has_many :devices

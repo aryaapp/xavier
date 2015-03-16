@@ -12,7 +12,7 @@ type Journal struct {
 	Questions pg.JSON   `json:"questions" db:"questions"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	ClientID  int       `json:"-" db:"client_id"`
+	AppID     int       `json:"-" db:"app_id"`
 	UserID    int       `json:"-" db:"user_id"`
 	Answers   []Answer  `json:"answers,omitempty"`
 	Metadata  pg.JSON   `json:"metadata,omitempty" db:"metadata"`

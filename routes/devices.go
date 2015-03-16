@@ -35,17 +35,16 @@ func UserDevicesUpdate(c *app.Context) *app.Error {
 		return &app.Error{422, "Device could not be created/updated. Invalid token"}
 	}
 
-	device := &storage.Device{}
-	device.Token = token
-	device.Environment = params.Environment
-	device.Name = params.Name
-	device.Model = params.Model
-	device.Os = params.Os
-	device.OsVersion = params.OsVersion
-	device.AppVersion = params.AppVersion
-	device.UserID = c.GetUserID()
-
-	inserted, err := c.DeviceStorage.InsertOrUpdate(device)
+	device, inserted, err := c.DeviceStorage.InsertOrUpdate(&storage.DeviceEntry{
+		Token:       token,
+		Environment: params.Environment,
+		Name:        params.Name,
+		Model:       params.Model,
+		Os:          params.Os,
+		OsVersion:   params.OsVersion,
+		AppVersion:  params.AppVersion,
+		UserID:      c.GetUserID(),
+	})
 	if err != nil {
 		c.LogError(err)
 		return &app.Error{500, "Devices could not be created/updated."}

@@ -24,7 +24,7 @@ func OAuthTokensCreate(c *app.Context) *app.Error {
 	}
 
 	if params.GrantType == oauth.Password {
-		client := c.GetClientForCurrentRequest()
+		a := c.GetAppForCurrentRequest()
 		user, err := c.UserStorage.FindByEmail(params.Email)
 		if err != nil {
 			c.LogError(err)
@@ -41,7 +41,7 @@ func OAuthTokensCreate(c *app.Context) *app.Error {
 			expiration = time.Hour * 3
 		}
 
-		token := token.New(client.UUID, expiration, user.ID, params.Scopes)
+		token := token.New(a.UUID, expiration, user.ID, params.Scopes)
 		encoded, err := token.Sign(c.Environment.Secret)
 		if err != nil {
 			c.LogError(err)

@@ -5,18 +5,18 @@ import (
 	"xavier/storage"
 )
 
-type ClientCache struct {
+type AppCache struct {
 	// *redis.Client
-	Clients []storage.Client
+	Apps []storage.App
 }
 
-func (c *ClientCache) Find(uuid string) (*storage.Client, error) {
-	for _, client := range c.Clients {
-		if client.UUID == uuid {
-			return &client, nil
+func (a *AppCache) Find(uuid string) (*storage.App, error) {
+	for _, app := range a.Apps {
+		if app.UUID == uuid {
+			return &app, nil
 		}
 	}
-	return nil, errors.New("Client not found.")
+	return nil, errors.New("App not found.")
 
 }
 
@@ -41,6 +41,6 @@ func (c *ClientCache) Find(uuid string) (*storage.Client, error) {
 // 	return client, err
 // }
 
-func (c *ClientCache) Insert(clients []storage.Client) {
-	c.Clients = clients
+func (a *AppCache) Insert(apps []storage.App) {
+	a.Apps = apps
 }

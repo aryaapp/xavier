@@ -13,6 +13,8 @@ import (
 func main() {
 	ctx := NewContext()
 	router := app.NewRouter()
+	router.Get("/", app.Handler(ctx, routes.RootIndex))
+
 	router.Group("/", func(r *app.Router) {
 		r.Post("/oauth/tokens", app.Handler(ctx, routes.OAuthTokensCreate))
 
@@ -21,7 +23,7 @@ func main() {
 
 		r.Post("/user", app.Handler(ctx, routes.UserCreate))
 
-	}, app.Middleware(ctx, Client))
+	}, app.Middleware(ctx, CurrentApp))
 
 	router.Group("/user", func(r *app.Router) {
 		r.Get("", app.Handler(ctx, routes.UserIndex))
@@ -67,11 +69,12 @@ func NewContext() *app.Context {
 	// }
 
 	ctx := app.NewContext(env, pg)
-	clients, err := ctx.ClientStorage.All()
+
+	apps, err := ctx.AppStorage.All()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	ctx.ClientCache.Insert(clients)
+	ctx.AppCache.Insert(apps)
 
 	// for i := 0; i < len(clients); i++ {
 	// 	client := clients[i]

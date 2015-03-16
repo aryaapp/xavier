@@ -9,6 +9,7 @@ class CreateNotes < ActiveRecord::Migration
     
   	change_column :notes, :uuid, :uuid, :null => false
     add_index :notes, :uuid
+    add_reference :notes, :app, index: true
     add_reference :notes, :user, index: true    
   end
 end

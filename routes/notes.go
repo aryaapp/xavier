@@ -2,7 +2,6 @@ package routes
 
 import (
 	"fmt"
-	"time"
 	"xavier/app"
 	"xavier/storage"
 )
@@ -37,13 +36,11 @@ func UserNotesCreate(c *app.Context) *app.Error {
 		return &app.Error{422, "Note could not be created. Invalid parameters"}
 	}
 
-	note := &storage.Note{}
-	note.Content = params.Content
-	note.CreatedAt = time.Now()
-	note.UpdatedAt = note.CreatedAt
-	note.UserID = c.GetUserID()
-
-	if err := c.NoteStorage.Insert(note); err != nil {
+	note, err := c.NoteStorage.Insert(&storage.NoteEntry{
+		Content: params.Content,
+		UserID:  c.GetUserID(),
+	})
+	if err != nil {
 		c.LogError(err)
 		return &app.Error{500, "Note could not be created." + err.Error()}
 	}

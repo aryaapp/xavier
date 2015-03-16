@@ -27,3 +27,15 @@ func strToIntSlice(s string) []int {
 	}
 	return a
 }
+
+type Strings []string
+
+func (s *Strings) Scan(src interface{}) error {
+	asBytes, ok := src.([]byte)
+	if !ok {
+		return error(errors.New("Scan source was not []byte"))
+	}
+	asString := string(asBytes)
+	(*s) = strings.Split(strings.Trim(asString, "{}"), ",")
+	return nil
+}

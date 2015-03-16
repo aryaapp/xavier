@@ -15,9 +15,20 @@ type Device struct {
 	UserID      int       `json:"-" db:"user_id"`
 }
 
+type DeviceEntry struct {
+	Token       string `json:"token"`
+	Environment string `json:"environment"`
+	Name        string `json:"name"`
+	Model       string `json:"model"`
+	Os          string `json:"os"`
+	OsVersion   string `json:"os_version"`
+	AppVersion  string `json:"app_version"`
+	UserID      int    `json:"user_id"`
+}
+
 type DeviceStorage interface {
 	All(int) ([]Device, error)
 	Find(string, int) (*Device, error)
 	Exists(string, int) (bool, error)
-	InsertOrUpdate(*Device) (bool, error)
+	InsertOrUpdate(*DeviceEntry) (*Device, bool, error)
 }

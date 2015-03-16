@@ -1,6 +1,6 @@
 Dir[File.expand_path("model/**/*.rb", File.dirname(__FILE__))].each { |rb| require rb }
 
-%w{ clients questionaires questions themes users }.each do |part|
+%w{ apps questionaires questions themes users }.each do |part|
   require File.expand_path(File.dirname(__FILE__))+"/seeds/#{part}.rb"
 end
 

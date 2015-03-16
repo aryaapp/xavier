@@ -1,8 +1,3 @@
-class Client < ActiveRecord::Base  
-  has_many :access_tokens
-  has_and_belongs_to_many :questions
-end
-
 scopes = [ 
   "connections",
   "devices", 
@@ -18,7 +13,7 @@ scopes = [
 
 grant_types =  [ "authorization_code", "password", "refresh_token" ]
 
-ios = Client.find_or_create_by( 
+ios = App.find_or_create_by( 
   uuid: "668ac08d-82b4-42a6-943b-2f6ca2c38258",
   name: "Arya iOS App", 
   url: "http://aryaapp.co",
@@ -28,7 +23,7 @@ ios.grant_types = grant_types
 ios.permitted_scopes = scopes
 ios.save
 
-android = Client.find_or_create_by( 
+android = App.find_or_create_by( 
   uuid: "e782c0c0-cf2c-4720-929f-bdcd314028f7",
   name: "Arya Android App", 
   url: "http://aryaapp.co",

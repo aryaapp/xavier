@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"time"
 	"xavier/app"
 	"xavier/storage"
 )
@@ -49,14 +48,12 @@ func UserCreate(c *app.Context) *app.Error {
 		return &app.Error{422, "User could not be created. Invalid password confirmation"}
 	}
 
-	user := &storage.User{}
-	user.Email = params.Email
-	user.Password = params.Password
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = user.CreatedAt
-	user.ThemeID = 1
-
-	err := c.UserStorage.Insert(user)
+	a := c.GetAppForCurrentRequest()
+	user, err := c.UserStorage.Insert(&storage.UserRegistration{
+		Email:    params.Email,
+		Password: params.Password,
+		AppID:    a.ID,
+	})
 	switch {
 	case err == storage.UserConflictError:
 		return &app.Error{409, "User could not be created. Already exists."}

@@ -10,7 +10,7 @@ class CreateJournals < ActiveRecord::Migration
     
     change_column :journals, :uuid, :uuid, :null => false
     add_index :journals, :uuid
-    add_reference :journals, :client, index: true
+    add_reference :journals, :app, index: true
     add_reference :journals, :user, index: true
   end
 end

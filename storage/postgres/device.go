@@ -50,20 +50,30 @@ func (db *DeviceDatabase) Exists(token string, userID int) (bool, error) {
 	return count == 1, nil
 }
 
-func (db *DeviceDatabase) InsertOrUpdate(d *storage.Device) (bool, error) {
-	exists, err := db.Exists(d.Token, d.UserID)
+func (db *DeviceDatabase) InsertOrUpdate(deviceEntry *storage.DeviceEntry) (*storage.Device, bool, error) {
+	exists, err := db.Exists(deviceEntry.Token, deviceEntry.UserID)
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
 
+	d := &storage.Device{
+		Token:       deviceEntry.Token,
+		Environment: deviceEntry.Environment,
+		Name:        deviceEntry.Name,
+		Model:       deviceEntry.Model,
+		Os:          deviceEntry.Os,
+		AppVersion:  deviceEntry.AppVersion,
+		UserID:      deviceEntry.UserID,
+	}
+	dateTime := time.Now()
 	if exists {
-		d.UpdatedAt = time.Now()
-		_, err := db.Query(devicesUpdate, d.Token, d.Environment, d.Name, d.Model, d.Os, d.OsVersion, d.AppVersion, d.UpdatedAt, d.UserID, d.Token, d.UserID)
-		return false, err
+		d.UpdatedAt = dateTime
+		_, err := db.Query(devicesUpdate, d.Token, d.Environment, d.Name, d.Model, d.Os, d.OsVersion, d.AppVersion, dateTime, d.UserID, d.Token, d.UserID)
+		return d, false, err
 	}
 
-	d.CreatedAt = time.Now()
-	d.UpdatedAt = d.CreatedAt
+	d.CreatedAt = dateTime
+	d.UpdatedAt = dateTime
 
-	return true, db.Get(d, devicesInsert, d.Token, d.Environment, d.Name, d.Model, d.Os, d.OsVersion, d.AppVersion, d.CreatedAt, d.UpdatedAt, d.UserID)
+	return d, true, db.Get(d, devicesInsert, d.Token, d.Environment, d.Name, d.Model, d.Os, d.AppVersion, d.CreatedAt, d.UpdatedAt, deviceEntry.UserID)
 }

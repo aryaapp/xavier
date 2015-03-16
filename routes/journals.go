@@ -56,7 +56,7 @@ func UserJournalsCreate(c *app.Context) *app.Error {
 		return &app.Error{422, "Journal could not be created. No answers are provided."}
 	}
 
-	if err := app.Validate(params.Answers); err != nil {
+	if err := c.Validator.Validate(params.Answers); err != nil {
 		c.LogError(err)
 		return &app.Error{422, "Journal could not be created. Invalid answers: " + err.Error()}
 	}
@@ -90,7 +90,7 @@ func UserJournalsCreate(c *app.Context) *app.Error {
 	journal.Questions = pg.JSON(string(questionsBytes))
 	journal.CreatedAt = time.Now()
 	journal.UpdatedAt = journal.CreatedAt
-	journal.ClientID = c.GetClientForCurrentRequest().ID
+	journal.AppID = c.GetAppForCurrentRequest().ID
 	journal.UserID = c.GetUserID()
 	journal.Answers = []storage.Answer{}
 

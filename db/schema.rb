@@ -18,21 +18,6 @@ ActiveRecord::Schema.define(version: 20150219154032) do
   enable_extension "uuid-ossp"
   enable_extension "hstore"
 
-  create_table "access_tokens", force: :cascade do |t|
-    t.uuid     "uuid",       default: "uuid_generate_v4()", null: false
-    t.string   "token",                                     null: false
-    t.string   "scopes",     default: [],                                array: true
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.integer  "client_id"
-    t.integer  "user_id"
-  end
-
-  add_index "access_tokens", ["client_id"], name: "index_access_tokens_on_client_id", using: :btree
-  add_index "access_tokens", ["token", "client_id"], name: "index_access_tokens_on_token_and_client_id", unique: true, using: :btree
-  add_index "access_tokens", ["user_id"], name: "index_access_tokens_on_user_id", using: :btree
-  add_index "access_tokens", ["uuid"], name: "index_access_tokens_on_uuid", using: :btree
-
   create_table "answers", force: :cascade do |t|
     t.uuid     "uuid",        default: "uuid_generate_v4()", null: false
     t.jsonb    "values"
@@ -47,7 +32,7 @@ ActiveRecord::Schema.define(version: 20150219154032) do
   add_index "answers", ["question_id"], name: "index_answers_on_question_id", using: :btree
   add_index "answers", ["uuid"], name: "index_answers_on_uuid", using: :btree
 
-  create_table "clients", force: :cascade do |t|
+  create_table "apps", force: :cascade do |t|
     t.uuid     "uuid",             default: "uuid_generate_v4()", null: false
     t.string   "name",                                            null: false
     t.string   "url",                                             null: false
@@ -58,7 +43,7 @@ ActiveRecord::Schema.define(version: 20150219154032) do
     t.datetime "updated_at"
   end
 
-  add_index "clients", ["uuid"], name: "index_clients_on_uuid", using: :btree
+  add_index "apps", ["uuid"], name: "index_apps_on_uuid", using: :btree
 
   create_table "devices", force: :cascade do |t|
     t.string   "token",       null: false
@@ -96,11 +81,11 @@ ActiveRecord::Schema.define(version: 20150219154032) do
     t.jsonb    "questions",                                 null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "client_id"
+    t.integer  "app_id"
     t.integer  "user_id"
   end
 
-  add_index "journals", ["client_id"], name: "index_journals_on_client_id", using: :btree
+  add_index "journals", ["app_id"], name: "index_journals_on_app_id", using: :btree
   add_index "journals", ["user_id"], name: "index_journals_on_user_id", using: :btree
   add_index "journals", ["uuid"], name: "index_journals_on_uuid", using: :btree
 
@@ -126,9 +111,11 @@ ActiveRecord::Schema.define(version: 20150219154032) do
     t.string   "content"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "app_id"
     t.integer  "user_id"
   end
 
+  add_index "notes", ["app_id"], name: "index_notes_on_app_id", using: :btree
   add_index "notes", ["user_id"], name: "index_notes_on_user_id", using: :btree
   add_index "notes", ["uuid"], name: "index_notes_on_uuid", using: :btree
 
@@ -141,9 +128,11 @@ ActiveRecord::Schema.define(version: 20150219154032) do
     t.string   "object_uri"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "app_id"
     t.integer  "user_id"
   end
 
+  add_index "notifications", ["app_id"], name: "index_notifications_on_app_id", using: :btree
   add_index "notifications", ["user_id"], name: "index_notifications_on_user_id", using: :btree
   add_index "notifications", ["uuid"], name: "index_notifications_on_uuid", using: :btree
 
@@ -215,24 +204,26 @@ ActiveRecord::Schema.define(version: 20150219154032) do
     t.boolean  "professional",    default: false,                null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "app_id"
     t.integer  "theme_id"
   end
 
+  add_index "users", ["app_id"], name: "index_users_on_app_id", using: :btree
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
   add_index "users", ["theme_id"], name: "index_users_on_theme_id", using: :btree
   add_index "users", ["uuid"], name: "index_users_on_uuid", using: :btree
 
-  add_foreign_key "access_tokens", "clients", on_update: :restrict, on_delete: :restrict
-  add_foreign_key "access_tokens", "users", on_update: :restrict, on_delete: :restrict
   add_foreign_key "answers", "journals", on_update: :cascade, on_delete: :cascade
   add_foreign_key "answers", "questions", on_update: :restrict, on_delete: :restrict
   add_foreign_key "devices", "users", on_update: :restrict, on_delete: :restrict
   add_foreign_key "invites", "users", on_update: :restrict, on_delete: :restrict
-  add_foreign_key "journals", "clients", on_update: :restrict, on_delete: :restrict
+  add_foreign_key "journals", "apps", on_update: :restrict, on_delete: :restrict
   add_foreign_key "journals", "users", on_update: :restrict, on_delete: :restrict
   add_foreign_key "keywords", "users", on_update: :restrict, on_delete: :restrict
   add_foreign_key "notes", "users", on_update: :restrict, on_delete: :restrict
+  add_foreign_key "notifications", "apps", on_update: :restrict, on_delete: :restrict
   add_foreign_key "questionaires_users", "questionaires", on_update: :restrict, on_delete: :restrict
   add_foreign_key "questionaires_users", "users", on_update: :restrict, on_delete: :restrict
+  add_foreign_key "users", "apps", on_update: :restrict, on_delete: :restrict
   add_foreign_key "users", "themes", on_update: :restrict, on_delete: :restrict
 end
