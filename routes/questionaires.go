@@ -2,20 +2,20 @@ package routes
 
 import (
 	"fmt"
-	"xavier/app"
+	"xavier/api"
 )
 
-func UserQuestionairesIndex(c *app.Context) *app.Error {
+func UserQuestionairesIndex(c *api.Context) *api.Error {
 	if q, err := c.QuestionaireStorage.All(c.GetUserID()); err == nil {
 		return c.JSON(200, "questionaires", q)
 	}
-	return &app.Error{404, "Questionaires could not be found."}
+	return &api.Error{404, "Questionaires could not be found."}
 }
 
-func UserQuestionairesShow(c *app.Context) *app.Error {
+func UserQuestionairesShow(c *api.Context) *api.Error {
 	uuid := c.URLParams.ByName("questionaire")
 	if q, err := c.QuestionaireStorage.Find(uuid, c.GetUserID()); err == nil {
 		return c.JSON(200, "questionaires", q)
 	}
-	return &app.Error{404, fmt.Sprintf("Questionaire could not be found for uuid %s", uuid)}
+	return &api.Error{404, fmt.Sprintf("Questionaire could not be found for uuid %s", uuid)}
 }

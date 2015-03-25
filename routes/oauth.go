@@ -2,7 +2,7 @@ package routes
 
 import (
 	"time"
-	"xavier/app"
+	"xavier/api"
 	"xavier/lib/oauth"
 	"xavier/lib/token"
 
@@ -16,11 +16,11 @@ type OAuthUserParams struct {
 	Scopes    []string `json:"scopes"`
 }
 
-func OAuthTokensCreate(c *app.Context) *app.Error {
+func OAuthTokensCreate(c *api.Context) *api.Error {
 	var params OAuthUserParams
 	if err := c.BindParamsAndValidate(&params); err != nil {
 		c.LogError(err)
-		return &app.Error{422, "Could not be authenticate. Invalid parameters, " + err.Error()}
+		return &api.Error{422, "Could not be authenticate. Invalid parameters, " + err.Error()}
 	}
 
 	if params.GrantType == oauth.Password {
@@ -28,12 +28,12 @@ func OAuthTokensCreate(c *app.Context) *app.Error {
 		user, err := c.UserStorage.FindByEmail(params.Email)
 		if err != nil {
 			c.LogError(err)
-			return &app.Error{401, "Could not be authenticate. Invalid email/password combination"}
+			return &api.Error{401, "Could not be authenticate. Invalid email/password combination"}
 		}
 
 		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.Password)); err != nil {
 			c.LogError(err)
-			return &app.Error{401, "Could not be authenticate. Invalid email/password combination"}
+			return &api.Error{401, "Could not be authenticate. Invalid email/password combination"}
 		}
 
 		expiration := time.Hour * 1000000
@@ -45,9 +45,9 @@ func OAuthTokensCreate(c *app.Context) *app.Error {
 		encoded, err := token.Sign(c.Environment.Secret)
 		if err != nil {
 			c.LogError(err)
-			return &app.Error{500, "Could not create token. Internal error"}
+			return &api.Error{500, "Could not create token. Internal error"}
 		}
 		return c.JSON(201, "token", encoded)
 	}
-	return &app.Error{422, "Could not be authenticate. Grant Type is not supported"}
+	return &api.Error{422, "Could not be authenticate. Grant Type is not supported"}
 }

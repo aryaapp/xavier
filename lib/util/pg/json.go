@@ -1,12 +1,18 @@
 package pg
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
 )
 
 type JSON json.RawMessage
+
+func (j *JSON) IsNull() bool {
+	b := []byte(*j)
+	return len(b) == 0 || bytes.Equal(b, []byte("null"))
+}
 
 // Returns the *j as the JSON encoding of j.
 func (j *JSON) MarshalJSON() ([]byte, error) {

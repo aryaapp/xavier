@@ -1,4 +1,4 @@
-package app
+package api
 
 import (
 	"encoding/json"
@@ -7,7 +7,6 @@ import (
 	"xavier/storage"
 	p "xavier/storage/postgres"
 	r "xavier/storage/redis"
-	"xavier/validator"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/julienschmidt/httprouter"
@@ -31,7 +30,6 @@ type Context struct {
 	Scopes      []string
 	URLParams   httprouter.Params
 	Writer      http.ResponseWriter
-	Validator   *validator.Validator
 }
 
 type Error struct {
@@ -42,7 +40,6 @@ type Error struct {
 type M map[string]interface{}
 
 func NewContext(env *Environment, pg *sqlx.DB) *Context {
-	validator := validator.New()
 	return &Context{
 		AppCache:            &r.AppCache{},
 		AppStorage:          &p.AppDatabase{pg},
@@ -55,7 +52,6 @@ func NewContext(env *Environment, pg *sqlx.DB) *Context {
 		ThemeStorage:        &p.ThemeDatabase{pg},
 		UserStorage:         &p.UserDatabase{pg},
 		Environment:         env,
-		Validator:           validator,
 	}
 }
 
@@ -72,7 +68,6 @@ func ChildContext(parent *Context, r *http.Request, w http.ResponseWriter) *Cont
 		ThemeStorage:        parent.ThemeStorage,
 		UserStorage:         parent.UserStorage,
 		Environment:         parent.Environment,
-		Validator:           parent.Validator,
 		Request:             r,
 		URLParams:           Params(r),
 		Writer:              w,
@@ -164,5 +159,5 @@ func (c *Context) BindParamsAndValidate(obj interface{}) error {
 	if err := c.BindParams(obj); err != nil {
 		return err
 	}
-	return c.Validator.Validate(obj)
+	return Validate(obj)
 }

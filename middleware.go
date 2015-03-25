@@ -3,12 +3,12 @@ package main
 import (
 	"net/http"
 	"strings"
-	"xavier/app"
+	"xavier/api"
 	"xavier/lib/token"
 	"xavier/storage"
 )
 
-func ContentType(c *app.Context, next http.HandlerFunc) *app.Error {
+func ContentType(c *api.Context, next http.HandlerFunc) *api.Error {
 	contentTypes := map[string]string{
 		"POST":  "application/json",
 		"PUT":   "application/json",
@@ -17,7 +17,7 @@ func ContentType(c *app.Context, next http.HandlerFunc) *app.Error {
 
 	if contentType, ok := contentTypes[c.Request.Method]; ok {
 		if !strings.HasPrefix(c.Request.Header.Get("Content-Type"), contentType) {
-			return &app.Error{415, "Please specify a supported content-type."}
+			return &api.Error{415, "Please specify a supported content-type."}
 		}
 	}
 
@@ -25,20 +25,20 @@ func ContentType(c *app.Context, next http.HandlerFunc) *app.Error {
 	return nil
 }
 
-func CurrentApp(c *app.Context, next http.HandlerFunc) *app.Error {
+func CurrentApp(c *api.Context, next http.HandlerFunc) *api.Error {
 	header := c.Request.Header.Get("Authorization")
 	if len(header) == 0 {
-		return &app.Error{401, "Authorization error: App header is empty."}
+		return &api.Error{401, "Authorization error: App header is empty."}
 	}
 
 	if !(len(header) > 3 && strings.ToUpper(header[0:3]) == "APP") {
-		return &app.Error{401, "Authorization error: App header is malformed."}
+		return &api.Error{401, "Authorization error: App header is malformed."}
 	}
 
 	appID := header[4:]
 	a, err := setApp(c, appID)
 	if err != nil {
-		return &app.Error{401, "Authorization error: Invalid App request"}
+		return &api.Error{401, "Authorization error: Invalid App request"}
 	}
 	c.SetAppForCurrentRequest(a)
 
@@ -46,19 +46,19 @@ func CurrentApp(c *app.Context, next http.HandlerFunc) *app.Error {
 	return nil
 }
 
-func Bearer(c *app.Context, next http.HandlerFunc) *app.Error {
+func Bearer(c *api.Context, next http.HandlerFunc) *api.Error {
 	token, err := token.ParseFromRequest(c.Request, c.Environment.Secret)
 	if err != nil {
-		return &app.Error{401, "Authorization error: " + err.Error()}
+		return &api.Error{401, "Authorization error: " + err.Error()}
 	}
 
 	if !token.ContainsScopes(c.Scopes) {
-		return &app.Error{401, "Authorization error: Doesn't have required scopes"}
+		return &api.Error{401, "Authorization error: Doesn't have required scopes"}
 	}
 
 	a, err := setApp(c, token.Audience)
 	if err != nil {
-		return &app.Error{401, "Authorization error: Invalid App in token"}
+		return &api.Error{401, "Authorization error: Invalid App in token"}
 	}
 
 	c.SetAppForCurrentRequest(a)
@@ -68,7 +68,7 @@ func Bearer(c *app.Context, next http.HandlerFunc) *app.Error {
 	return nil
 }
 
-func setApp(c *app.Context, uuid string) (*storage.App, error) {
+func setApp(c *api.Context, uuid string) (*storage.App, error) {
 	a, err := c.AppCache.Find(uuid)
 	if a == nil && err == nil {
 		a, err = c.AppStorage.Find(uuid)

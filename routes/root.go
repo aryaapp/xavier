@@ -1,7 +1,7 @@
 package routes
 
-import "xavier/app"
+import "xavier/api"
 
-func RootIndex(c *app.Context) *app.Error {
+func RootIndex(c *api.Context) *api.Error {
 	return c.JSON(200, "hello", "world")
 }

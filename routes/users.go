@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"xavier/app"
+	"xavier/api"
 	"xavier/storage"
 )
 
@@ -12,11 +12,11 @@ type UserParams struct {
 	Scopes               []string `json:"scopes"`
 }
 
-func UserIndex(c *app.Context) *app.Error {
+func UserIndex(c *api.Context) *api.Error {
 	u, err := c.UserStorage.FindByID(c.GetUserID())
 	if err != nil {
 		c.LogError(err)
-		return &app.Error{404, "User could not be found."}
+		return &api.Error{404, "User could not be found."}
 	}
 
 	j, err := c.JournalStorage.LastWeek(u.ID)
@@ -39,13 +39,13 @@ func UserIndex(c *app.Context) *app.Error {
 	return c.JSON(200, "user", u)
 }
 
-func UserCreate(c *app.Context) *app.Error {
+func UserCreate(c *api.Context) *api.Error {
 	var params UserParams
 	if err := c.BindParamsAndValidate(&params); err != nil {
 		c.LogError(err)
-		return &app.Error{422, "User could not be created. Invalid parameters:" + err.Error()}
+		return &api.Error{422, "User could not be created. Invalid parameters:" + err.Error()}
 	} else if params.Password != params.PasswordConfirmation {
-		return &app.Error{422, "User could not be created. Invalid password confirmation"}
+		return &api.Error{422, "User could not be created. Invalid password confirmation"}
 	}
 
 	a := c.GetAppForCurrentRequest()
@@ -56,10 +56,10 @@ func UserCreate(c *app.Context) *app.Error {
 	})
 	switch {
 	case err == storage.UserConflictError:
-		return &app.Error{409, "User could not be created. Already exists."}
+		return &api.Error{409, "User could not be created. Already exists."}
 	case err != nil:
 		c.LogError(err)
-		return &app.Error{500, "User could not be created. Internal error" + err.Error()}
+		return &api.Error{500, "User could not be created. Internal error" + err.Error()}
 	default:
 		return c.JSON(201, "user", user)
 	}

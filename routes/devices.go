@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"xavier/app"
+	"xavier/api"
 	"xavier/storage"
 )
 
@@ -14,25 +14,25 @@ type DeviceParams struct {
 	AppVersion  string `json:"app_version" validate:"nonzero"`
 }
 
-func UserDevicesIndex(c *app.Context) *app.Error {
+func UserDevicesIndex(c *api.Context) *api.Error {
 	d, err := c.DeviceStorage.All(c.GetUserID())
 	if err == nil {
 		return c.JSON(200, "devices", d)
 	}
 	c.LogError(err)
-	return &app.Error{404, "Devices could not be found."}
+	return &api.Error{404, "Devices could not be found."}
 }
 
-func UserDevicesUpdate(c *app.Context) *app.Error {
+func UserDevicesUpdate(c *api.Context) *api.Error {
 	var params DeviceParams
 	if err := c.BindParamsAndValidate(&params); err != nil {
 		c.LogError(err)
-		return &app.Error{422, "Device could not be created/updated. Invalid parameters"}
+		return &api.Error{422, "Device could not be created/updated. Invalid parameters"}
 	}
 
 	token := c.URLParams.ByName("device")
 	if len([]rune(token)) != 64 {
-		return &app.Error{422, "Device could not be created/updated. Invalid token"}
+		return &api.Error{422, "Device could not be created/updated. Invalid token"}
 	}
 
 	device, inserted, err := c.DeviceStorage.InsertOrUpdate(&storage.DeviceEntry{
@@ -47,7 +47,7 @@ func UserDevicesUpdate(c *app.Context) *app.Error {
 	})
 	if err != nil {
 		c.LogError(err)
-		return &app.Error{500, "Devices could not be created/updated."}
+		return &api.Error{500, "Devices could not be created/updated."}
 	}
 	if inserted {
 		return c.JSON(201, "devices", device)

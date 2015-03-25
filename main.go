@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"xavier/app"
+	"xavier/api"
 	"xavier/routes"
 
 	"github.com/codegangsta/negroni"
@@ -12,51 +12,51 @@ import (
 
 func main() {
 	ctx := NewContext()
-	router := app.NewRouter()
-	router.Get("/", app.Handler(ctx, routes.RootIndex))
+	router := api.NewRouter()
+	router.Get("/", api.Handler(ctx, routes.RootIndex))
 
-	router.Group("/", func(r *app.Router) {
-		r.Post("/oauth/tokens", app.Handler(ctx, routes.OAuthTokensCreate))
+	router.Group("/", func(r *api.Router) {
+		r.Post("/oauth/tokens", api.Handler(ctx, routes.OAuthTokensCreate))
 
-		r.Get("/themes", app.Handler(ctx, routes.ThemesIndex))
-		r.Get("/themes/:theme", app.Handler(ctx, routes.ThemesShow))
+		r.Get("/themes", api.Handler(ctx, routes.ThemesIndex))
+		r.Get("/themes/:theme", api.Handler(ctx, routes.ThemesShow))
 
-		r.Post("/user", app.Handler(ctx, routes.UserCreate))
+		r.Post("/user", api.Handler(ctx, routes.UserCreate))
 
-	}, app.Middleware(ctx, CurrentApp))
+	}, api.Middleware(ctx, CurrentApp))
 
-	router.Group("/user", func(r *app.Router) {
-		r.Get("", app.Handler(ctx, routes.UserIndex))
-		// m.Put("", app.Handler(ctx, routes.UserCreate))
+	router.Group("/user", func(r *api.Router) {
+		r.Get("", api.Handler(ctx, routes.UserIndex))
+		// m.Put("", api.Handler(ctx, routes.UserCreate))
 
-		r.Get("/devices", app.Handler(ctx, routes.UserDevicesIndex))
-		r.Put("/devices/:device", app.Handler(ctx, routes.UserDevicesUpdate))
+		r.Get("/devices", api.Handler(ctx, routes.UserDevicesIndex))
+		r.Put("/devices/:device", api.Handler(ctx, routes.UserDevicesUpdate))
 
-		r.Get("/journals", app.Handler(ctx, routes.UserJournalsIndex))
-		r.Get("/journals/:journal", app.Handler(ctx, routes.UserJournalsShow))
-		r.Post("/journals", app.Handler(ctx, routes.UserJournalsCreate))
+		r.Get("/journals", api.Handler(ctx, routes.UserJournalsIndex))
+		r.Get("/journals/:journal", api.Handler(ctx, routes.UserJournalsShow))
+		r.Post("/journals", api.Handler(ctx, routes.UserJournalsCreate))
 
-		r.Get("/notes", app.Handler(ctx, routes.UserNotesIndex))
-		r.Get("/notes/:note", app.Handler(ctx, routes.UserNotesShow))
-		r.Post("/notes", app.Handler(ctx, routes.UserNotesCreate))
+		r.Get("/notes", api.Handler(ctx, routes.UserNotesIndex))
+		r.Get("/notes/:note", api.Handler(ctx, routes.UserNotesShow))
+		r.Post("/notes", api.Handler(ctx, routes.UserNotesCreate))
 
-		r.Get("/questionaires", app.Handler(ctx, routes.UserQuestionairesIndex))
-		r.Get("/questionaires/:questionaire", app.Handler(ctx, routes.UserQuestionairesShow))
+		r.Get("/questionaires", api.Handler(ctx, routes.UserQuestionairesIndex))
+		r.Get("/questionaires/:questionaire", api.Handler(ctx, routes.UserQuestionairesShow))
 
-		r.Get("/questions/:question", app.Handler(ctx, routes.UserQuestionsShow))
-		r.Get("/questions/:question/keywords", app.Handler(ctx, routes.UserQuestionsKeywordsIndex))
-		r.Get("/questions/:question/keywords/:keyword", app.Handler(ctx, routes.UserQuestionsKeywordsShow))
+		r.Get("/questions/:question", api.Handler(ctx, routes.UserQuestionsShow))
+		r.Get("/questions/:question/keywords", api.Handler(ctx, routes.UserQuestionsKeywordsIndex))
+		r.Get("/questions/:question/keywords/:keyword", api.Handler(ctx, routes.UserQuestionsKeywordsShow))
 
-	}, app.Middleware(ctx, Bearer))
+	}, api.Middleware(ctx, Bearer))
 
 	n := negroni.Classic()
-	n.Use(app.Middleware(ctx, ContentType))
+	n.Use(api.Middleware(ctx, ContentType))
 	n.UseHandler(router)
 	n.Run(":8000")
 }
 
-func NewContext() *app.Context {
-	env := app.DefaultEnvironment()
+func NewContext() *api.Context {
+	env := api.DefaultEnvironment()
 
 	pg, err := sqlx.Connect("postgres", env.Postgres)
 	if err != nil {
@@ -68,7 +68,7 @@ func NewContext() *app.Context {
 	// 	log.Fatalln(err)
 	// }
 
-	ctx := app.NewContext(env, pg)
+	ctx := api.NewContext(env, pg)
 
 	apps, err := ctx.AppStorage.All()
 	if err != nil {
