@@ -21,5 +21,10 @@ Xavier is the API server for Arya. Many awesome
 
 ##TODO List
 - [ ] Registration is still missing. (with confirm mail)
+- [ ] Localization support. For questions just make a new record in the db and refer to this record.
+- [ ] Let people send invites to connect to each other (therapist->patient viceversa).
+- [ ] Receive related users to an user.
+- [ ] Let an related access all information available based on permissions.
 - [ ] Storage unit tests, mock storage tests.
 - [ ] Storage DB pagination support (one page 1 fetch 20 items, on page 2 the next 20 items)
+- [ ] Send push notification(s) via Goroutine.

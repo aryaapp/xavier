@@ -29,8 +29,6 @@ type Verifier struct {
 	verifyKey []byte
 }
 
-// GetKey can be passed to the `jwt.Parse` function and returns the key which is
-// used for decoding.
 func (v *Verifier) GetKey(token *jwt.Token) (interface{}, error) {
 	return v.verifyKey, nil
 }
