@@ -17,3 +17,9 @@ Xavier is the API server for Arya. Many awesome
 5. (Optional) Setup all the Go dependencies via the Makefile. Run 'make install' and you're set!
 6. Run 'fresh' and the project will be build. Also it will be recompiled after you changed and saved a file. Woot!
 7. (Optional) Install pgweb to easily look inside the PostgreSQL databases https://github.com/sosedoff/pgweb
+
+
+##TODO List
+- [ ] Registration is still missing. (with confirm mail)
+- [ ] Storage unit tests, mock storage tests.
+- [ ] Storage DB pagination support (one page 1 fetch 20 items, on page 2 the next 20 items)
