@@ -12,14 +12,12 @@ type Note struct {
 	UserID    int       `json:"-" db:"user_id"`
 }
 
-type NoteEntry struct {
-	Content string `json:"content"`
-	AppID   int    `json:"app_id"`
-	UserID  int    `json:"user_id"`
+type NoteInput struct {
+	Content string `json:"content" validate:"nonzero"`
 }
 
 type NoteStorage interface {
-	All(int) ([]Note, error)
-	Find(string, int) (*Note, error)
-	Insert(*NoteEntry) (*Note, error)
+	FindAll(userID int) ([]Note, error)
+	FindByUUID(uuid string, userID int) (*Note, error)
+	New(input *NoteInput, userID int, appID int) (*Note, error)
 }

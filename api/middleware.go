@@ -3,26 +3,21 @@ package api
 import (
 	"net/http"
 
-	"github.com/codegangsta/negroni"
+	"github.com/aryaapp/xavier/jwt"
+	"github.com/labstack/echo"
 )
 
-type middleware struct {
-	ctx        *Context
-	handleFunc func(*Context, http.HandlerFunc) *Error
-}
-
-func (m middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	c := ChildContext(m.ctx, r, w)
-	if e := m.handleFunc(c, next); e != nil {
-		switch e.Code {
-		case 422:
-			c.JSONError(e.Code, "Unprocessable Entity", e.Message)
-		default:
-			c.JSONError(e.Code, http.StatusText(e.Code), e.Message)
+func (a *AppContext) Bearer() echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		accessToken := &jwt.AccessToken{}
+		if err := a.JWTClient.DecodeFromRequest(accessToken, c.Request()); err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 		}
-	}
-}
 
-func Middleware(ctx *Context, handleFunc func(*Context, http.HandlerFunc) *Error) negroni.Handler {
-	return middleware{ctx, handleFunc}
+		if accessToken.UserID > 0 {
+			c.Set("user.id", accessToken.UserID)
+			return nil
+		}
+		return echo.NewHTTPError(http.StatusUnauthorized, "token doesn't contain valid user credentials")
+	}
 }

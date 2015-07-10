@@ -2,8 +2,8 @@ package postgres
 
 import (
 	"time"
-	"xavier/storage"
 
+	"github.com/aryaapp/xavier/storage"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -32,17 +32,17 @@ const (
 	`
 )
 
-func (db *DeviceDatabase) All(userID int) ([]storage.Device, error) {
+func (db *DeviceDatabase) FindAll(userID int) ([]storage.Device, error) {
 	d := []storage.Device{}
 	return d, db.Select(&d, devicesAll, userID)
 }
 
-func (db *DeviceDatabase) Find(token string, userID int) (*storage.Device, error) {
+func (db *DeviceDatabase) FindByToken(token string, userID int) (*storage.Device, error) {
 	d := &storage.Device{}
 	return d, db.Get(d, devicesFind, token, userID)
 }
 
-func (db *DeviceDatabase) Exists(token string, userID int) (bool, error) {
+func (db *DeviceDatabase) ExistsForToken(token string, userID int) (bool, error) {
 	var count int
 	if err := db.Get(&count, devicesCount, token, userID); err != nil {
 		return false, err
@@ -50,8 +50,8 @@ func (db *DeviceDatabase) Exists(token string, userID int) (bool, error) {
 	return count == 1, nil
 }
 
-func (db *DeviceDatabase) InsertOrUpdate(deviceEntry *storage.DeviceEntry) (*storage.Device, bool, error) {
-	exists, err := db.Exists(deviceEntry.Token, deviceEntry.UserID)
+func (db *DeviceDatabase) NewOrEdit(deviceEntry *storage.DeviceEntry) (*storage.Device, bool, error) {
+	exists, err := db.ExistsForToken(deviceEntry.Token, deviceEntry.UserID)
 	if err != nil {
 		return nil, false, err
 	}

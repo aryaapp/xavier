@@ -1,8 +1,7 @@
 package postgres
 
 import (
-	"xavier/storage"
-
+	"github.com/aryaapp/xavier/storage"
 	"github.com/jmoiron/sqlx"
 )
 

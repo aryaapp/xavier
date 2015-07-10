@@ -8,7 +8,7 @@ type Theme struct {
 }
 
 type ThemeStorage interface {
-	All() ([]Theme, error)
-	Find(string) (*Theme, error)
-	FindByID(int) (*Theme, error)
+	FindAll() ([]Theme, error)
+	FindByUUID(uuid string) (*Theme, error)
+	FindByID(id int) (*Theme, error)
 }

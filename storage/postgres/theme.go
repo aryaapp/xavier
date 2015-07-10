@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"xavier/storage"
+	"github.com/aryaapp/xavier/storage"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -10,12 +10,12 @@ type ThemeDatabase struct {
 	*sqlx.DB
 }
 
-func (db *ThemeDatabase) All() ([]storage.Theme, error) {
+func (db *ThemeDatabase) FindAll() ([]storage.Theme, error) {
 	t := []storage.Theme{}
 	return t, db.Select(&t, "SELECT uuid, color, wallpaper FROM themes t")
 }
 
-func (db *ThemeDatabase) Find(uuid string) (*storage.Theme, error) {
+func (db *ThemeDatabase) FindByUUID(uuid string) (*storage.Theme, error) {
 	t := &storage.Theme{}
 	return t, db.Get(t, "SELECT uuid, color, wallpaper FROM themes t WHERE uuid = $1", uuid)
 }

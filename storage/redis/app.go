@@ -2,7 +2,8 @@ package redis
 
 import (
 	"errors"
-	"xavier/storage"
+
+	"github.com/aryaapp/xavier/storage"
 )
 
 type AppCache struct {
@@ -10,7 +11,7 @@ type AppCache struct {
 	Apps []storage.App
 }
 
-func (a *AppCache) Find(uuid string) (*storage.App, error) {
+func (a *AppCache) FindByUUID(uuid string) (*storage.App, error) {
 	for _, app := range a.Apps {
 		if app.UUID == uuid {
 			return &app, nil
@@ -41,6 +42,6 @@ func (a *AppCache) Find(uuid string) (*storage.App, error) {
 // 	return client, err
 // }
 
-func (a *AppCache) Insert(apps []storage.App) {
+func (a *AppCache) New(apps []storage.App) {
 	a.Apps = apps
 }

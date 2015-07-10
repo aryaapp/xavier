@@ -1,8 +1,7 @@
 package postgres
 
 import (
-	"xavier/storage"
-
+	"github.com/aryaapp/xavier/storage"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -25,29 +24,29 @@ const (
 		RETURNING uuid, values, created_at, updated_at, journal_id, question_id`
 )
 
-func (db *JournalDatabase) All(userID int) ([]storage.Journal, error) {
+func (db *JournalDatabase) FindAll(userID int) ([]storage.Journal, error) {
 	j := []storage.Journal{}
 	return j, db.Select(&j, journalsAll, userID)
 }
 
-func (db *JournalDatabase) Find(uuid string, userID int) (*storage.Journal, error) {
-	j := &storage.Journal{}
-	return j, db.Get(j, journalsFind, uuid, userID)
-}
-
-func (db *JournalDatabase) LastWeek(userID int) ([]storage.Journal, error) {
+func (db *JournalDatabase) FindForLastWeek(userID int) ([]storage.Journal, error) {
 	j := []storage.Journal{}
 	err := db.Select(&j, journalsLastWeek, userID)
 	return j, err
 }
 
-func (db *JournalDatabase) Answers(journalID int) ([]storage.Answer, error) {
+func (db *JournalDatabase) FindByUUID(uuid string, userID int) (*storage.Journal, error) {
+	j := &storage.Journal{}
+	return j, db.Get(j, journalsFind, uuid, userID)
+}
+
+func (db *JournalDatabase) FindAllAnswers(journalID int) ([]storage.Answer, error) {
 	a := []storage.Answer{}
 	err := db.Select(&a, journalsAnswers, journalID)
 	return a, err
 }
 
-func (db *JournalDatabase) Insert(journal *storage.Journal) error {
+func (db *JournalDatabase) New(journal *storage.Journal) error {
 	tx := db.MustBegin()
 
 	if err := tx.Get(journal, journalsInsert, journal.Feeling, journal.Questions, journal.CreatedAt, journal.UpdatedAt, journal.AppID, journal.UserID); err != nil {

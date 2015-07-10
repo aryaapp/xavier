@@ -25,17 +25,17 @@ type User struct {
 	Theme         *Theme         `json:"theme,omitempty"`
 }
 
-type UserRegistration struct {
+type UserSignup struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	AppID    int    `json:"app_id"`
 }
 
 type UserStorage interface {
-	Find(string) (*User, error)
+	FindByUUID(string) (*User, error)
 	FindByID(int) (*User, error)
 	FindByEmail(string) (*User, error)
-	Insert(*UserRegistration) (*User, error)
+	New(signup *UserSignup, appID int) (*User, error)
 }
 
 var UserConflictError = errors.New("Already exists.")

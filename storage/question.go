@@ -1,7 +1,5 @@
 package storage
 
-import "xavier/lib/util/pg"
-
 type Question struct {
 	ID            int       `json:"-" db:"id"`
 	UUID          string    `json:"uuid" db:"uuid"`
@@ -12,7 +10,7 @@ type Question struct {
 	Important     bool      `json:"important" db:"important"`
 	Autocompletes bool      `json:"autocompletes" db:"autocompletes"`
 	Keywords      []Keyword `json:"keywords,omitempty"`
-	UserData      pg.JSON   `json:"user_data" db:"user_data"`
+	UserData      JSON      `json:"user_data" db:"user_data"`
 }
 
 type QuestionStorage interface {

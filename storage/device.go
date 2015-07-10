@@ -27,8 +27,8 @@ type DeviceEntry struct {
 }
 
 type DeviceStorage interface {
-	All(int) ([]Device, error)
-	Find(string, int) (*Device, error)
-	Exists(string, int) (bool, error)
-	InsertOrUpdate(*DeviceEntry) (*Device, bool, error)
+	FindAll(userID int) ([]Device, error)
+	FindByToken(token string, userID int) (*Device, error)
+	ExistsForToken(token string, userID int) (bool, error)
+	NewOrEdit(*DeviceEntry) (*Device, bool, error)
 }

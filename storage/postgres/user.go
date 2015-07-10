@@ -3,7 +3,8 @@ package postgres
 import (
 	"strings"
 	"time"
-	"xavier/storage"
+
+	"github.com/aryaapp/xavier/storage"
 
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
@@ -13,7 +14,7 @@ type UserDatabase struct {
 	*sqlx.DB
 }
 
-func (db *UserDatabase) Find(uuid string) (*storage.User, error) {
+func (db *UserDatabase) FindByUUID(uuid string) (*storage.User, error) {
 	u := &storage.User{}
 	err := db.Get(u, "SELECT id, uuid, email, created_at, updated_at, fullname, gender, theme_id FROM users u WHERE u.uuid = $1", uuid)
 	return u, err
@@ -31,15 +32,15 @@ func (db *UserDatabase) FindByEmail(email string) (*storage.User, error) {
 	return u, err
 }
 
-func (db *UserDatabase) Insert(registration *storage.UserRegistration) (*storage.User, error) {
+func (db *UserDatabase) New(signup *storage.UserSignup, appID int) (*storage.User, error) {
 	count := 0
-	if err := db.Get(&count, "SELECT COUNT(*) FROM users u WHERE u.email = $1", strings.ToLower(registration.Email)); err != nil {
+	if err := db.Get(&count, "SELECT COUNT(*) FROM users u WHERE u.email = $1", strings.ToLower(signup.Email)); err != nil {
 		return nil, err
 	} else if count > 0 {
 		return nil, storage.UserConflictError
 	}
 
-	password, err := bcrypt.GenerateFromPassword([]byte(registration.Password), bcrypt.MinCost)
+	password, err := bcrypt.GenerateFromPassword([]byte(signup.Password), bcrypt.MinCost)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +50,7 @@ func (db *UserDatabase) Insert(registration *storage.UserRegistration) (*storage
 
 	u := &storage.User{}
 	createdAt := time.Now()
-	return u, db.Get(u, query, strings.ToLower(registration.Email), password, createdAt, createdAt, 1)
+	return u, db.Get(u, query, strings.ToLower(signup.Email), password, createdAt, createdAt, 1)
 
 	// fields := "email, created_at, updated_at, theme_id"
 	// query := fmt.Sprintf("INSERT INTO users (%s, password) VALUES (?, ?, ?, ?) RETURNING uuid, %s", fields, fields)

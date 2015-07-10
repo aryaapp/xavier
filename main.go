@@ -1,88 +1,65 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"xavier/api"
-	"xavier/routes"
 
-	"github.com/codegangsta/negroni"
+	"github.com/aryaapp/xavier/api"
+	"github.com/aryaapp/xavier/jwt"
+
+	p "github.com/aryaapp/xavier/storage/postgres"
+	r "github.com/aryaapp/xavier/storage/redis"
+
 	"github.com/jmoiron/sqlx"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/labstack/echo"
+	mw "github.com/labstack/echo/middleware"
+
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	ctx := NewContext()
-	router := api.NewRouter()
-	router.Get("/", api.Handler(ctx, routes.RootIndex))
+	c := api.NewConfig()
+	err := envconfig.Process("hermes", c)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
-	router.Group("/", func(r *api.Router) {
-		r.Post("/oauth/tokens", api.Handler(ctx, routes.OAuthTokensCreate))
+	// Postgres
+	pg, err := sqlx.Connect("postgres", c.PostgresURL)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer pg.Close()
 
-		r.Get("/themes", api.Handler(ctx, routes.ThemesIndex))
-		r.Get("/themes/:theme", api.Handler(ctx, routes.ThemesShow))
+	a := &api.AppContext{
+		Config:              c,
+		JWTClient:           &jwt.Client{c.PrivateKey},
+		AppCache:            &r.AppCache{},
+		AppStorage:          &p.AppDatabase{pg},
+		DeviceStorage:       &p.DeviceDatabase{pg},
+		JournalStorage:      &p.JournalDatabase{pg},
+		KeywordStorage:      &p.KeywordDatabase{pg},
+		NoteStorage:         &p.NoteDatabase{pg},
+		QuestionStorage:     &p.QuestionDatabase{pg},
+		QuestionaireStorage: &p.QuestionaireDatabase{pg},
+		ThemeStorage:        &p.ThemeDatabase{pg},
+		UserStorage:         &p.UserDatabase{pg},
+	}
 
-		r.Post("/user", api.Handler(ctx, routes.UserCreate))
-
-	}, api.Middleware(ctx, CurrentApp))
-
-	router.Group("/user", func(r *api.Router) {
-		r.Get("", api.Handler(ctx, routes.UserIndex))
-		// m.Put("", api.Handler(ctx, routes.UserCreate))
-
-		r.Get("/devices", api.Handler(ctx, routes.UserDevicesIndex))
-		r.Put("/devices/:device", api.Handler(ctx, routes.UserDevicesUpdate))
-
-		r.Get("/journals", api.Handler(ctx, routes.UserJournalsIndex))
-		r.Get("/journals/:journal", api.Handler(ctx, routes.UserJournalsShow))
-		r.Post("/journals", api.Handler(ctx, routes.UserJournalsCreate))
-
-		r.Get("/notes", api.Handler(ctx, routes.UserNotesIndex))
-		r.Get("/notes/:note", api.Handler(ctx, routes.UserNotesShow))
-		r.Post("/notes", api.Handler(ctx, routes.UserNotesCreate))
-
-		r.Get("/questionaires", api.Handler(ctx, routes.UserQuestionairesIndex))
-		r.Get("/questionaires/:questionaire", api.Handler(ctx, routes.UserQuestionairesShow))
-
-		r.Get("/questions/:question", api.Handler(ctx, routes.UserQuestionsShow))
-		r.Get("/questions/:question/keywords", api.Handler(ctx, routes.UserQuestionsKeywordsIndex))
-		r.Get("/questions/:question/keywords/:keyword", api.Handler(ctx, routes.UserQuestionsKeywordsShow))
-
-	}, api.Middleware(ctx, Bearer))
-
-	n := negroni.Classic()
-	n.Use(api.Middleware(ctx, ContentType))
-	n.UseHandler(router)
-	n.Run(":8000")
-}
-
-func NewContext() *api.Context {
-	env := api.DefaultEnvironment()
-
-	pg, err := sqlx.Connect("postgres", env.Postgres)
+	// Move all apps to memory cache
+	apps, err := a.AppStorage.FindAll()
 	if err != nil {
 		log.Fatalln(err)
 	}
+	a.AppCache.New(apps)
 
-	// red, err := redis.DialTimeout("tcp", env.Redis, time.Duration(10)*time.Second)
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
+	e := echo.New()
+	e.Use(mw.Logger())
 
-	ctx := api.NewContext(env, pg)
+	api.Mux(e, a)
 
-	apps, err := ctx.AppStorage.All()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	ctx.AppCache.Insert(apps)
-
-	// for i := 0; i < len(clients); i++ {
-	// 	client := clients[i]
-	// 	err := ctx.ClientCache.Insert(&client)
-	// 	if err != nil {
-	// 		log.Fatalln(err)
-	// 	}
-	// }
-
-	return ctx
+	addr := fmt.Sprintf(":%d", c.Port)
+	log.Printf("Starting server on: %s", addr)
+	e.Run(addr)
 }

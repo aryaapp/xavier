@@ -2,7 +2,8 @@ package postgres
 
 import (
 	"time"
-	"xavier/storage"
+
+	"github.com/aryaapp/xavier/storage"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -18,20 +19,20 @@ const (
 	`
 )
 
-func (db *NoteDatabase) All(userID int) ([]storage.Note, error) {
+func (db *NoteDatabase) FindAll(userID int) ([]storage.Note, error) {
 	n := []storage.Note{}
 	err := db.Select(&n, "SELECT uuid, content, created_at, updated_at, user_id FROM notes n WHERE n.user_id = $1", userID)
 	return n, err
 }
 
-func (db *NoteDatabase) Find(uuid string, userID int) (*storage.Note, error) {
+func (db *NoteDatabase) FindByUUID(uuid string, userID int) (*storage.Note, error) {
 	n := &storage.Note{}
 	err := db.Get(n, "SELECT uuid, content, created_at, updated_at, user_id FROM notes n WHERE n.uuid = $1 AND n.user_id = $2 LIMIT 1", uuid, userID)
 	return n, err
 }
 
-func (db *NoteDatabase) Insert(noteEntry *storage.NoteEntry) (*storage.Note, error) {
+func (db *NoteDatabase) New(input *storage.NoteInput, userID int, appID int) (*storage.Note, error) {
 	n := &storage.Note{}
 	createdAt := time.Now()
-	return n, db.Get(n, notesInsert, noteEntry.Content, createdAt, createdAt, noteEntry.UserID)
+	return n, db.Get(n, notesInsert, input.Content, createdAt, createdAt, userID)
 }
