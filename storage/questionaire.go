@@ -8,6 +8,6 @@ type Questionaire struct {
 }
 
 type QuestionaireStorage interface {
-	All(int) ([]Questionaire, error)
-	Find(string, int) (*Questionaire, error)
+	FindAll(int) ([]Questionaire, error)
+	FindByUUID(string, int) (*Questionaire, error)
 }

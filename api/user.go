@@ -15,8 +15,8 @@ func (a *AppContext) FindUserByID(c *echo.Context) error {
 	}
 
 	u.Journals, _ = a.JournalStorage.FindForLastWeek(u.ID)
-	u.Questionaires, _ = a.QuestionaireStorage.All(u.ID)
-	u.Theme, _ = a.ThemeStorage.FindByID(u.ThemeID)
+	u.Questionaires, _ = a.QuestionaireStorage.FindAll(u.ID)
+	// u.Theme, _ = a.ThemeStorage.FindByID(u.ThemeID)
 
 	return c.JSON(http.StatusOK, Data{u})
 }

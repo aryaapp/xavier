@@ -1,8 +1,6 @@
 package postgres
 
 import (
-	"fmt"
-
 	"github.com/aryaapp/xavier/storage"
 	"github.com/jmoiron/sqlx"
 )
@@ -18,16 +16,16 @@ const (
 				SELECT uuid, title, description, view, important, autocompletes, user_data FROM questions q
 				WHERE q.uuid = $1
 				LIMIT 1
-			) q ON TRUE 
+			) q ON TRUE
 		JOIN questionaires_users qu ON qu.questionaire_id = qs.id AND qu.user_id = $2
 		LIMIT 1`
 	questionWhereIn = `
-		SELECT id, uuid, title, description, processor, view, important, autocompletes, user_data 
+		SELECT id, uuid, title, description, processor, view, important, autocompletes, user_data
 		FROM questions q WHERE uuid IN (?)
 	`
 )
 
-func (db *QuestionDatabase) Find(uuid string, userID int) (*storage.Question, error) {
+func (db *QuestionDatabase) FindByUUID(uuid string, userID int) (*storage.Question, error) {
 	q := &storage.Question{}
 	err := db.Get(q, questionFind, uuid, userID)
 	return q, err
@@ -35,7 +33,7 @@ func (db *QuestionDatabase) Find(uuid string, userID int) (*storage.Question, er
 
 func (db *QuestionDatabase) WhereIn(uuids []string) ([]storage.Question, error) {
 	q := []storage.Question{}
-	query := fmt.Sprintf(questionWhereIn, uuids)
-	err := db.Select(&q, query)
+	query, _, err := sqlx.In(questionWhereIn, uuids)
+	err = db.Select(&q, query)
 	return q, err
 }

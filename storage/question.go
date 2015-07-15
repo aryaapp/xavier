@@ -14,6 +14,6 @@ type Question struct {
 }
 
 type QuestionStorage interface {
-	Find(string, int) (*Question, error)
+	FindByUUID(string, int) (*Question, error)
 	WhereIn([]string) ([]Question, error)
 }

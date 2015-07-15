@@ -48,7 +48,6 @@ func (e Error) MarshalJSON() ([]byte, error) {
 
 // Mux has all the routes needed for Xaxiver
 func Mux(e *echo.Echo, a *AppContext) {
-
 	// OAuth
 	e.Post("/oauth/token", a.NewAccessToken)
 
@@ -63,13 +62,22 @@ func Mux(e *echo.Echo, a *AppContext) {
 	u.Get("", a.FindUserByID)
 	u.Use(a.Bearer())
 	{
+		// Devices
+		u.Get("/devices", a.FindAllDevices)
+
+		// Journals
+		u.Get("/journals", a.FindAllJournals)
+		u.Get("/journals/:uuid", a.FindJournalByUUID)
 
 		// Notes
 		u.Get("/notes", a.FindAllNotes)
 		u.Get("/notes/:uuid", a.FindNoteByUUID)
+		u.Post("/notes", a.NewNote)
 
-		// Devices
-		u.Get("/devices", a.FindAllDevices)
+		u.Get("/questionaires", a.FindAllQuestionaires)
+		u.Get("/questionaires/:uuid", a.FindQuestionaireByUUID)
+
+		u.Get("/questions/:uuid", a.FindQuestionByUUID)
 	}
 
 	// u.Put("/devices/:token", a.)
